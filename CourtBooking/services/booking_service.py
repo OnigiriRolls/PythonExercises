@@ -51,10 +51,6 @@ class BookingService:
     def cancel_booking(self, booking_id: int) -> bool:
         for booking in self.booking_repository.get_all():
             if booking.booking_id == booking_id:
-                if booking.status == BookingStatus.CANCELLED:
-                    return False
-
                 booking.cancel()
                 return True
-
         return False
