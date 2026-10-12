@@ -1,5 +1,4 @@
 from datetime import datetime
-
 from models.booking import Booking
 from models.booking_status import BookingStatus
 
@@ -34,9 +33,9 @@ class BookingService:
         self, court, start_time: datetime, end_time: datetime
     ) -> bool:
         for booking in self.booking_repository.get_all():
-            if booking.court.id != court.id:
+            if booking.status != BookingStatus.ACTIVE:
                 continue
-            if booking.status == BookingStatus.CANCELLED:
+            if booking.court.court_id != court.court_id:
                 continue
             overlaps = start_time < booking.end_time and end_time > booking.start_time
             if overlaps:
@@ -48,3 +47,14 @@ class BookingService:
     ) -> None:
         booking = Booking(booking_id, owner, court, start_time, end_time)
         self.booking_repository.add(booking)
+
+    def cancel_booking(self, booking_id: int) -> bool:
+        for booking in self.booking_repository.get_all():
+            if booking.booking_id == booking_id:
+                if booking.status == BookingStatus.CANCELLED:
+                    return False
+
+                booking.cancel()
+                return True
+
+        return False
