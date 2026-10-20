@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App - Home</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #eef3f8;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        .user-section {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            text-align: right;
+        }
+
+        .user-section p {
+            margin: 0 0 10px;
+            color: #263b50;
+            font-size: 16px;
+        }
+
+        .logout-button {
+            padding: 8px 16px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .main-content {
+            display: flex;
+            justify-content: center;
+            padding-top: 100px;
+        }
+
+        .temperatures-button {
+            padding: 13px 28px;
+            background-color: #2878c8;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .temperatures-button:hover {
+            background-color: #1d5f9f;
+        }
+
+        .api-result {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        .api-result pre {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+
+        .api-result {
+            margin: 30px auto;
+            max-width: 100%;
+            overflow-x: auto;
+        }
+
+        .api-result table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .api-result th,
+        .api-result td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .api-result th {
+            background-color: #f2f2f2;
+        }
+
+        .api-result tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="user-section">
+        <p>Hello, {{ username }}</p>
+        <form method="POST" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="logout-button">Logout</button>
+        </form>
+    </div>
+
+    <main class="main-content">
+        <form method="POST" action="{% url 'get_temperatures' %}">
+            {% csrf_token %}
+
+            <button type="submit" class="temperatures-button">
+                Get temperatures
+            </button>
+        </form>
+
+        {% if weather_data %}
+        <div class="api-result">
+            <h3>Weather Data</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nearest city name</th>
+                        <th>Country abbr</th>
+                        <th>Latitudine</th>
+                        <th>Longitudine</th>
+                        <th>Temperature (°C)</th>
+                        <th>Feels like temp (°C)</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for weather in weather_data %}
+                    <tr>
+                        <td>{{ weather.city_name }}</td>
+                        <td>{{ weather.country_code }}</td>
+                        <td>{{ weather.lat }}</td>
+                        <td>{{ weather.lon }}</td>
+                        <td>{{ weather.temp }}</td>
+                        <td>{{ weather.app_temp }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        {% if api_error %}
+        <p style="color: red;">{{ api_error }}</p>
+        {% endif %}
+    </main>
+</body>
+
+</html>
