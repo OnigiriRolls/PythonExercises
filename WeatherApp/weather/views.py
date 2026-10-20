@@ -1,6 +1,5 @@
 import requests
 import os
-import json
 
 from decimal import Decimal
 from .models import WeatherReading
@@ -9,6 +8,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
+from django.db.models import Avg, Count
 
 
 def login_view(request):
@@ -124,5 +124,44 @@ def get_temperatures_view(request):
             "username": request.user.username,
             "weather_data": weather_data,
             "api_error": api_error,
+        },
+    )
+
+
+@login_required
+def get_average_view(request):
+    result = WeatherReading.objects.aggregate(
+        average=Avg("temperature"),
+        count=Count("id"),
+    )
+
+    average = result["average"]
+    count = result["count"]
+
+    if average is not None:
+        average = round(average, 2)
+
+    readings = WeatherReading.objects.order_by("-created_at")
+
+    weather_data = [
+        {
+            "city_name": reading.city_name,
+            "country_code": reading.country_code,
+            "lat": reading.latitude,
+            "lon": reading.longitude,
+            "temp": reading.temperature,
+            "app_temp": reading.feels_like_temperature,
+        }
+        for reading in readings
+    ]
+
+    return render(
+        request,
+        "home.html",
+        {
+            "username": request.user.username,
+            "weather_data": weather_data,
+            "average": average,
+            "count": count,
         },
     )

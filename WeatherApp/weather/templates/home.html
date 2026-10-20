@@ -96,6 +96,23 @@
         .api-result tr:nth-child(even) {
             background-color: #f9f9f9;
         }
+
+
+        .average-button {
+            padding: 10px 20px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        .average-result {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .average-result p {
+            margin: 5px 0;
+            font-size: 16px;
+        }
     </style>
 </head>
 
@@ -117,6 +134,27 @@
             </button>
         </form>
 
+        <form method="POST" action="{% url 'get_average' %}">
+            {% csrf_token %}
+            <button type="submit" class="average-button">
+                Get average
+            </button>
+        </form>
+
+        <div class="average-result">
+            <p>
+                Average:
+                {% if average != None %}
+                {{ average }} °C
+                {% else %}
+                No data yet
+                {% endif %}
+            </p>
+
+            <p>Count: {{ count|default_if_none:"0" }}</p>
+        </div>
+
+
         {% if weather_data %}
         <div class="api-result">
             <h3>Weather Data</h3>
@@ -124,12 +162,12 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Nearest city name</th>
-                        <th>Country abbr</th>
-                        <th>Latitudine</th>
-                        <th>Longitudine</th>
+                        <th>Nearest City</th>
+                        <th>Country</th>
+                        <th>Latitude</th>
+                        <th>Longitude</th>
                         <th>Temperature (°C)</th>
-                        <th>Feels like temp (°C)</th>
+                        <th>Feels Like(°C)</th>
                     </tr>
                 </thead>
 

@@ -7,4 +7,5 @@ urlpatterns = [
     path("home/", views.home_view, name="home"),
     path("logout/", views.logout_view, name="logout"),
     path("get-temperatures/", views.get_temperatures_view, name="get_temperatures"),
+    path("get-average/", views.get_average_view, name="get_average"),
 ]
