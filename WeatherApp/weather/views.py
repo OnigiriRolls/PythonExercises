@@ -2,6 +2,8 @@ import requests
 import os
 import json
 
+from decimal import Decimal
+from .models import WeatherReading
 from django.shortcuts import redirect, render
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
@@ -80,12 +82,23 @@ def get_temperatures_view(request):
                     },
                     timeout=10,
                 )
-      
+
                 response.raise_for_status()
                 result = response.json()
+
                 if result.get("data"):
                     weather_data = []
+
                     for weather in result["data"]:
+                        WeatherReading.objects.create(
+                            city_name=weather.get("city_name") or "",
+                            country_code=weather.get("country_code") or "",
+                            latitude=Decimal(str(weather["lat"])),
+                            longitude=Decimal(str(weather["lon"])),
+                            temperature=Decimal(str(weather["temp"])),
+                            feels_like_temperature=Decimal(str(weather["app_temp"])),
+                        )
+
                         weather_data.append(
                             {
                                 "city_name": weather.get("city_name"),
