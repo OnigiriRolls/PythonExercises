@@ -3,43 +3,39 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
+from django.views.decorators.http import require_POST
 
 
+@require_POST
 def login_view(request):
-    error = None
+    username = request.POST.get("username", "").strip()
+    password = request.POST.get("password", "")
+    user = authenticate(request, username=username, password=password)
+    if user is not None:
+        login(request, user)
+        return redirect("home")
 
-    if request.method == "POST":
-        username = request.POST.get("username", "").strip()
-        password = request.POST.get("password", "")
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            return redirect("home")
-        error = "Invalid username or password."
-
+    error = "Invalid username or password."
     return render(request, "login.html", {"error": error})
 
 
+@require_POST
 def register_view(request):
     error = None
 
-    if request.method == "POST":
-        username = request.POST.get("username", "").strip()
-        password = request.POST.get("password", "")
-        confirm_password = request.POST.get("confirm_password", "")
+    username = request.POST.get("username", "").strip()
+    password = request.POST.get("password", "")
+    confirm_password = request.POST.get("confirm_password", "")
 
-        if not username or not password or not confirm_password:
-            error = "All fields are required."
-
-        elif password != confirm_password:
-            error = "Passwords do not match."
-
-        elif User.objects.filter(username=username).exists():
-            error = "This username is already taken."
-
-        else:
-            User.objects.create_user(username=username, password=password)
-            return redirect("login")
+    if not username or not password or not confirm_password:
+        error = "All fields are required."
+    elif password != confirm_password:
+        error = "Passwords do not match."
+    elif User.objects.filter(username=username).exists():
+        error = "This username is already taken."
+    else:
+        User.objects.create_user(username=username, password=password)
+        return redirect("login")
 
     return render(request, "register.html", {"error": error})
 

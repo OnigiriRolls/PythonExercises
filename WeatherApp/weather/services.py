@@ -1,6 +1,7 @@
 import os
 import requests
 
+from django.conf import settings
 from decimal import Decimal
 from django.db.models import Avg, Count
 from .models import WeatherReading, TemperatureAverage
@@ -8,24 +9,22 @@ from .models import WeatherReading, TemperatureAverage
 
 def fetch_and_save_weather(latitude=51.2, longitude=12.5):
     api_key = os.environ.get("WEATHERBIT_API_KEY")
-
     if not api_key:
         raise ValueError("Weatherbit API key is not configured.")
 
     response = requests.get(
-        "https://api.weatherbit.io/v2.0/current",
+        settings.WEATHERBIT_API_URL,
         params={
             "lat": latitude,
             "lon": longitude,
             "key": api_key,
         },
-        timeout=10,
+        timeout=settings.WEATHERBIT_API_TIMEOUT,
     )
     response.raise_for_status()
 
     result = response.json()
     weather_data = []
-
     for weather in result.get("data", []):
         reading = WeatherReading.objects.create(
             city_name=weather.get("city_name") or "",
@@ -61,7 +60,6 @@ def calculate_and_save_average(latitude=51.2, longitude=12.5):
 
     if average is not None:
         average = round(average, 2)
-
         TemperatureAverage.objects.create(
             latitude=Decimal(str(latitude)),
             longitude=Decimal(str(longitude)),
@@ -70,6 +68,6 @@ def calculate_and_save_average(latitude=51.2, longitude=12.5):
         )
 
     return {
-        "average": float(average) if average is not None else None,
+        "average": average,
         "count": count,
     }

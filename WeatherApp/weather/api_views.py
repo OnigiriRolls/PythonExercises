@@ -1,17 +1,12 @@
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-
+from django.views.decorators.http import require_POST
 from .services import fetch_and_save_weather, calculate_and_save_average
 
 
+@require_POST
 @login_required
 def get_temperatures_view(request):
-    if request.method != "POST":
-        return JsonResponse(
-            {"api_error": "Method not allowed."},
-            status=405,
-        )
-
     try:
         weather_data = fetch_and_save_weather()
     except ValueError as error:
@@ -36,16 +31,10 @@ def get_temperatures_view(request):
     )
 
 
+@require_POST
 @login_required
 def get_average_view(request):
-    if request.method != "POST":
-        return JsonResponse(
-            {"api_error": "Method not allowed."},
-            status=405,
-        )
-
     result = calculate_and_save_average()
-
     return JsonResponse(
         {
             **result,

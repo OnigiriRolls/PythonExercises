@@ -128,3 +128,5 @@ MAILERS = {
 }
 
 LOGIN_URL = "login"
+WEATHERBIT_API_URL = "https://api.weatherbit.io/v2.0/current"
+WEATHERBIT_API_TIMEOUT = 10
