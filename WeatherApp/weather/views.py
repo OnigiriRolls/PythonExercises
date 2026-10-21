@@ -2,7 +2,7 @@ import requests
 import os
 
 from decimal import Decimal
-from .models import WeatherReading
+from .models import WeatherReading, TemperatureAverage
 from django.shortcuts import redirect, render
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
@@ -140,7 +140,12 @@ def get_average_view(request):
 
     if average is not None:
         average = round(average, 2)
-
+        TemperatureAverage.objects.create(
+            latitude=Decimal("51.2"),
+            longitude=Decimal("12.5"),
+            average_temperature=average,
+            count=count,
+        )
     readings = WeatherReading.objects.order_by("-created_at")
 
     weather_data = [
