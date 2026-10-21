@@ -1,146 +1,45 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'weather/css/home.css' %}">
     <title>Weather App - Home</title>
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #eef3f8;
-            margin: 0;
-            min-height: 100vh;
-        }
-
-        .user-section {
-            position: absolute;
-            top: 20px;
-            right: 25px;
-            text-align: right;
-        }
-
-        .user-section p {
-            margin: 0 0 10px;
-            color: #263b50;
-            font-size: 16px;
-        }
-
-        .logout-button {
-            padding: 8px 16px;
-            background-color: #6c757d;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        .main-content {
-            display: flex;
-            justify-content: center;
-            padding-top: 100px;
-        }
-
-        .temperatures-button {
-            padding: 13px 28px;
-            background-color: #2878c8;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        .temperatures-button:hover {
-            background-color: #1d5f9f;
-        }
-
-        .api-result {
-            max-width: 800px;
-            margin: 30px auto;
-            padding: 20px;
-            background-color: white;
-            border-radius: 8px;
-            overflow-x: auto;
-        }
-
-        .api-result pre {
-            white-space: pre-wrap;
-            overflow-wrap: anywhere;
-        }
-
-
-        .api-result {
-            margin: 30px auto;
-            max-width: 100%;
-            overflow-x: auto;
-        }
-
-        .api-result table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .api-result th,
-        .api-result td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: center;
-        }
-
-        .api-result th {
-            background-color: #f2f2f2;
-        }
-
-        .api-result tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-
-
-        .average-button {
-            padding: 10px 20px;
-            margin-top: 10px;
-            cursor: pointer;
-        }
-
-        .average-result {
-            margin: 20px 0;
-            text-align: center;
-        }
-
-        .average-result p {
-            margin: 5px 0;
-            font-size: 16px;
-        }
-    </style>
 </head>
 
 <body>
-    <div class="user-section">
-        <p>Hello, {{ username }}</p>
-        <form method="POST" action="{% url 'logout' %}">
-            {% csrf_token %}
-            <button type="submit" class="logout-button">Logout</button>
-        </form>
-    </div>
+    <header class="top-bar">
+        <div class="action-buttons">
+            <form id="temperatures-form" method="POST" action="{% url 'get_temperatures' %}">
+                {% csrf_token %}
+                <button type="submit" class="temperatures-button">
+                    Get temperatures
+                </button>
+            </form>
+
+            <form id="average-form" method="POST" action="{% url 'get_average' %}">
+                {% csrf_token %}
+                <button type="submit" class="average-button">
+                    Get average
+                </button>
+            </form>
+        </div>
+
+        <div class="user-section">
+            <p>Hello, {{ username }}</p>
+
+            <form method="POST" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="logout-button">
+                    Logout
+                </button>
+            </form>
+        </div>
+    </header>
 
     <main class="main-content">
-        <form id="temperatures-form" method="POST" action="{% url 'get_temperatures' %}">
-            {% csrf_token %}
-
-            <button type="submit" class="temperatures-button">
-                Get temperatures
-            </button>
-        </form>
-
-        <form id="average-form" method="POST" action="{% url 'get_average' %}">
-            {% csrf_token %}
-            <button type="submit" class="average-button">
-                Get average
-            </button>
-        </form>
-
         <div class="average-result">
             <p>Average: <span id="average-value">...</span></p>
             <p>Count: <span id="average-count">...</span></p>
@@ -157,7 +56,7 @@
                         <th>Latitude</th>
                         <th>Longitude</th>
                         <th>Temperature (°C)</th>
-                        <th>Feels Like(°C)</th>
+                        <th>Feels Like (°C)</th>
                     </tr>
                 </thead>
 
@@ -182,107 +81,7 @@
         <p style="color: red;">{{ api_error }}</p>
         {% endif %}
     </main>
-
-    <script>
-        const temperaturesForm = document.getElementById("temperatures-form");
-        const averageForm = document.getElementById("average-form");
-
-        temperaturesForm.addEventListener("submit", async function (event) {
-            event.preventDefault();
-
-            const button = temperaturesForm.querySelector("button");
-            button.disabled = true;
-
-            try {
-                const response = await fetch(temperaturesForm.action, {
-                    method: "POST",
-                    body: new FormData(temperaturesForm),
-                    headers: {
-                        "X-Requested-With": "XMLHttpRequest"
-                    }
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error("Could not retrieve weather data.");
-                }
-
-                if (data.api_error) {
-                    alert(data.api_error);
-                    return;
-                }
-
-                const tbody = document.getElementById("weather-table-body");
-                tbody.replaceChildren();
-
-                for (const weather of data.weather_data) {
-                    const row = document.createElement("tr");
-
-                    const values = [
-                        weather.city_name,
-                        weather.country_code,
-                        weather.lat,
-                        weather.lon,
-                        weather.temp,
-                        weather.app_temp
-                    ];
-
-                    for (const value of values) {
-                        const cell = document.createElement("td");
-                        cell.textContent = value ?? "";
-                        row.appendChild(cell);
-                    }
-
-                    tbody.appendChild(row);
-                }
-            } catch (error) {
-                alert(error.message);
-            } finally {
-                button.disabled = false;
-            }
-        });
-
-
-        averageForm.addEventListener("submit", async function (event) {
-            event.preventDefault();
-
-            const button = averageForm.querySelector("button");
-            button.disabled = true;
-
-            try {
-                const response = await fetch(averageForm.action, {
-                    method: "POST",
-                    body: new FormData(averageForm),
-                    headers: {
-                        "X-Requested-With": "XMLHttpRequest"
-                    }
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error("Could not calculate the average.");
-                }
-
-                if (data.api_error) {
-                    alert(data.api_error);
-                    return;
-                }
-
-                document.getElementById("average-value").textContent =
-                    data.average === null ? "No data yet" : `${data.average} °C`;
-
-                document.getElementById("average-count").textContent =
-                    data.count;
-            } catch (error) {
-                alert(error.message);
-            } finally {
-                button.disabled = false;
-            }
-        });
-
-    </script>
+    <script src="{% static 'weather/js/home.js' %}" defer></script>
 </body>
 
 </html>
