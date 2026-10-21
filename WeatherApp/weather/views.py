@@ -1,15 +1,8 @@
-import requests
-import os
-
-from decimal import Decimal
-from .models import WeatherReading, TemperatureAverage
 from django.shortcuts import redirect, render
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
-from django.db.models import Avg, Count
-from django.http import JsonResponse
 
 
 def login_view(request):
@@ -60,95 +53,3 @@ def home_view(request):
 def logout_view(request):
     logout(request)
     return redirect("login")
-
-
-@login_required
-def get_temperatures_view(request):
-    weather_data = None
-    api_error = None
-
-    if request.method == "POST":
-        api_key = os.environ.get("WEATHERBIT_API_KEY")
-
-        if not api_key:
-            api_error = "Weatherbit API key is not configured."
-        else:
-            try:
-                response = requests.get(
-                    "https://api.weatherbit.io/v2.0/current",
-                    params={
-                        "lat": 51.2,
-                        "lon": 12.5,
-                        "key": api_key,
-                    },
-                    timeout=10,
-                )
-
-                response.raise_for_status()
-                result = response.json()
-
-                if result.get("data"):
-                    weather_data = []
-
-                    for weather in result["data"]:
-                        WeatherReading.objects.create(
-                            city_name=weather.get("city_name") or "",
-                            country_code=weather.get("country_code") or "",
-                            latitude=Decimal(str(weather["lat"])),
-                            longitude=Decimal(str(weather["lon"])),
-                            temperature=Decimal(str(weather["temp"])),
-                            feels_like_temperature=Decimal(str(weather["app_temp"])),
-                        )
-
-                        weather_data.append(
-                            {
-                                "city_name": weather.get("city_name"),
-                                "country_code": weather.get("country_code"),
-                                "lat": weather.get("lat"),
-                                "lon": weather.get("lon"),
-                                "temp": weather.get("temp"),
-                                "app_temp": weather.get("app_temp"),
-                            }
-                        )
-                else:
-                    api_error = "No weather data was returned."
-
-            except requests.RequestException:
-                api_error = "Could not retrieve weather data. Please try again."
-            except ValueError:
-                api_error = "The API returned an invalid JSON response."
-
-    return JsonResponse(
-        {
-            "weather_data": weather_data,
-            "api_error": api_error,
-        }
-    )
-
-
-@login_required
-def get_average_view(request):
-    result = WeatherReading.objects.aggregate(
-        average=Avg("temperature"),
-        count=Count("id"),
-    )
-
-    average = result["average"]
-    count = result["count"]
-
-    if average is not None:
-        average = round(average, 2)
-        TemperatureAverage.objects.create(
-            latitude=Decimal("51.2"),
-            longitude=Decimal("12.5"),
-            average_temperature=average,
-            count=count,
-        )
-
-    return JsonResponse(
-        {
-            "average": float(average) if average is not None else None,
-            "count": count,
-            "api_error": None,
-        }
-    )
