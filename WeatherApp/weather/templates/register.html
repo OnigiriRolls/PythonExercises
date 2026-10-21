@@ -74,7 +74,7 @@
     <div class="register-container">
         <h1>Create Account</h1>
 
-        <form method="POST">
+        <form method="POST" action="{% url 'register_user' %}">
             {% csrf_token %}
 
             <label for="username">Username</label>
@@ -98,7 +98,7 @@
 
         <p class="login-link">
             Already have an account?
-            <a href="{% url 'login' %}">Login</a>
+            <a href="{% url 'main_page_view' %}">Login</a>
         </p>
     </div>
 </body>

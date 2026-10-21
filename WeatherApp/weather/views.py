@@ -3,11 +3,16 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
+
+
+@require_GET
+def main_page_view(request):
+    return render(request, "login.html")
 
 
 @require_POST
-def login_view(request):
+def login_user(request):
     username = request.POST.get("username", "").strip()
     password = request.POST.get("password", "")
     user = authenticate(request, username=username, password=password)
@@ -19,8 +24,13 @@ def login_view(request):
     return render(request, "login.html", {"error": error})
 
 
-@require_POST
+@require_GET
 def register_view(request):
+    return render(request, "register.html")
+
+
+@require_POST
+def register(request):
     error = None
 
     username = request.POST.get("username", "").strip()
@@ -35,17 +45,19 @@ def register_view(request):
         error = "This username is already taken."
     else:
         User.objects.create_user(username=username, password=password)
-        return redirect("login")
+        return redirect("main_page_view")
 
     return render(request, "register.html", {"error": error})
 
 
+@require_GET
 @login_required
 def home_view(request):
     context = {"username": request.user.username}
     return render(request, "home.html", context)
 
 
+@require_POST
 def logout_view(request):
     logout(request)
-    return redirect("login")
+    return redirect("main_page_view")
