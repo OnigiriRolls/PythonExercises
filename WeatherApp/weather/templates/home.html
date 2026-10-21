@@ -126,7 +126,7 @@
     </div>
 
     <main class="main-content">
-        <form method="POST" action="{% url 'get_temperatures' %}">
+        <form id="temperatures-form" method="POST" action="{% url 'get_temperatures' %}">
             {% csrf_token %}
 
             <button type="submit" class="temperatures-button">
@@ -134,7 +134,7 @@
             </button>
         </form>
 
-        <form method="POST" action="{% url 'get_average' %}">
+        <form id="average-form" method="POST" action="{% url 'get_average' %}">
             {% csrf_token %}
             <button type="submit" class="average-button">
                 Get average
@@ -142,20 +142,10 @@
         </form>
 
         <div class="average-result">
-            <p>
-                Average:
-                {% if average != None %}
-                {{ average }} °C
-                {% else %}
-                No data yet
-                {% endif %}
-            </p>
-
-            <p>Count: {{ count|default_if_none:"0" }}</p>
+            <p>Average: <span id="average-value">...</span></p>
+            <p>Count: <span id="average-count">...</span></p>
         </div>
 
-
-        {% if weather_data %}
         <div class="api-result">
             <h3>Weather Data</h3>
 
@@ -171,7 +161,8 @@
                     </tr>
                 </thead>
 
-                <tbody>
+                <tbody id="weather-table-body">
+                    {% if weather_data %}
                     {% for weather in weather_data %}
                     <tr>
                         <td>{{ weather.city_name }}</td>
@@ -182,15 +173,116 @@
                         <td>{{ weather.app_temp }}</td>
                     </tr>
                     {% endfor %}
+                    {% endif %}
                 </tbody>
             </table>
         </div>
-        {% endif %}
 
         {% if api_error %}
         <p style="color: red;">{{ api_error }}</p>
         {% endif %}
     </main>
+
+    <script>
+        const temperaturesForm = document.getElementById("temperatures-form");
+        const averageForm = document.getElementById("average-form");
+
+        temperaturesForm.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const button = temperaturesForm.querySelector("button");
+            button.disabled = true;
+
+            try {
+                const response = await fetch(temperaturesForm.action, {
+                    method: "POST",
+                    body: new FormData(temperaturesForm),
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest"
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error("Could not retrieve weather data.");
+                }
+
+                if (data.api_error) {
+                    alert(data.api_error);
+                    return;
+                }
+
+                const tbody = document.getElementById("weather-table-body");
+                tbody.replaceChildren();
+
+                for (const weather of data.weather_data) {
+                    const row = document.createElement("tr");
+
+                    const values = [
+                        weather.city_name,
+                        weather.country_code,
+                        weather.lat,
+                        weather.lon,
+                        weather.temp,
+                        weather.app_temp
+                    ];
+
+                    for (const value of values) {
+                        const cell = document.createElement("td");
+                        cell.textContent = value ?? "";
+                        row.appendChild(cell);
+                    }
+
+                    tbody.appendChild(row);
+                }
+            } catch (error) {
+                alert(error.message);
+            } finally {
+                button.disabled = false;
+            }
+        });
+
+
+        averageForm.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const button = averageForm.querySelector("button");
+            button.disabled = true;
+
+            try {
+                const response = await fetch(averageForm.action, {
+                    method: "POST",
+                    body: new FormData(averageForm),
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest"
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error("Could not calculate the average.");
+                }
+
+                if (data.api_error) {
+                    alert(data.api_error);
+                    return;
+                }
+
+                document.getElementById("average-value").textContent =
+                    data.average === null ? "No data yet" : `${data.average} °C`;
+
+                document.getElementById("average-count").textContent =
+                    data.count;
+            } catch (error) {
+                alert(error.message);
+            } finally {
+                button.disabled = false;
+            }
+        });
+
+    </script>
 </body>
 
 </html>

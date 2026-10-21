@@ -9,6 +9,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 from django.db.models import Avg, Count
+from django.http import JsonResponse
 
 
 def login_view(request):
@@ -117,14 +118,11 @@ def get_temperatures_view(request):
             except ValueError:
                 api_error = "The API returned an invalid JSON response."
 
-    return render(
-        request,
-        "home.html",
+    return JsonResponse(
         {
-            "username": request.user.username,
             "weather_data": weather_data,
             "api_error": api_error,
-        },
+        }
     )
 
 
@@ -146,27 +144,11 @@ def get_average_view(request):
             average_temperature=average,
             count=count,
         )
-    readings = WeatherReading.objects.order_by("-created_at")
 
-    weather_data = [
+    return JsonResponse(
         {
-            "city_name": reading.city_name,
-            "country_code": reading.country_code,
-            "lat": reading.latitude,
-            "lon": reading.longitude,
-            "temp": reading.temperature,
-            "app_temp": reading.feels_like_temperature,
-        }
-        for reading in readings
-    ]
-
-    return render(
-        request,
-        "home.html",
-        {
-            "username": request.user.username,
-            "weather_data": weather_data,
-            "average": average,
+            "average": float(average) if average is not None else None,
             "count": count,
-        },
+            "api_error": None,
+        }
     )
