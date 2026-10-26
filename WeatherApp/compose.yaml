@@ -31,5 +31,13 @@ services:
       db:
         condition: service_healthy
 
+  adminer:
+    image: adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
 volumes:
   mysql_data:

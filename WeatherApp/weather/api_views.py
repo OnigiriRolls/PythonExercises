@@ -12,13 +12,15 @@ from .services import (
 def get_temperatures_view(request):
     try:
         weather_data = fetch_and_save_weather(
+            user=request.user,
             city=request.POST.get("city", ""),
             latitude=request.POST.get("latitude", ""),
             longitude=request.POST.get("longitude", ""),
         )
     except ValueError as error:
         return JsonResponse({"api_error": str(error)}, status=400)
-    except Exception:
+    except Exception as ex:
+        print(ex)
         return JsonResponse(
             {"api_error": ("Could not retrieve weather data. Please try again.")},
             status=500,
@@ -43,6 +45,7 @@ def get_temperatures_view(request):
 def get_average_view(request):
     try:
         result = calculate_and_save_average(
+            user=request.user,
             city=request.POST.get("city", ""),
             latitude=request.POST.get("latitude", ""),
             longitude=request.POST.get("longitude", ""),

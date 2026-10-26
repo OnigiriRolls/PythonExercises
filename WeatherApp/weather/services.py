@@ -58,7 +58,7 @@ def fetch_weather_data(city=None, latitude=None, longitude=None):
     api_key = os.environ.get("WEATHERBIT_API_KEY")
     if not api_key:
         raise ValueError("Weatherbit API key is not configured.")
-    
+
     params = {"key": api_key}
     if latitude is not None and longitude is not None:
         params["lat"] = latitude
@@ -117,7 +117,7 @@ def resolve_location(city=None, latitude=None, longitude=None):
     )
 
 
-def fetch_and_save_weather(city=None, latitude=None, longitude=None):
+def fetch_and_save_weather(user, city=None, latitude=None, longitude=None):
     location_input = validate_location_input(
         city,
         latitude,
@@ -139,6 +139,7 @@ def fetch_and_save_weather(city=None, latitude=None, longitude=None):
             longitude=weather["lon"],
         )
         reading = WeatherReading.objects.create(
+            user=user,
             location=location,
             city_name=city_name,
             country_code=country_code,
@@ -161,14 +162,14 @@ def fetch_and_save_weather(city=None, latitude=None, longitude=None):
     return saved_weather
 
 
-def calculate_and_save_average(city=None, latitude=None, longitude=None):
+def calculate_and_save_average(user, city=None, latitude=None, longitude=None):
     location_input = validate_location_input(
         city,
         latitude,
         longitude,
     )
     location = resolve_location(**location_input)
-    result = WeatherReading.objects.filter(location=location).aggregate(
+    result = WeatherReading.objects.filter(user=user, location=location).aggregate(
         average=Avg("temperature"),
         count=Count("id"),
     )
@@ -178,6 +179,7 @@ def calculate_and_save_average(city=None, latitude=None, longitude=None):
     if average is not None:
         average = round(average, 2)
         TemperatureAverage.objects.create(
+            user=user,
             location=location,
             latitude=location.latitude,
             longitude=location.longitude,
