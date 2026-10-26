@@ -191,3 +191,19 @@ def calculate_and_save_average(user, city=None, latitude=None, longitude=None):
         "average": average,
         "count": count,
     }
+
+
+def get_weather_history(user):
+    readings = WeatherReading.objects.filter(user=user).order_by("-created_at")
+    weather_data = [
+        {
+            "city_name": reading.city_name,
+            "country_code": reading.country_code,
+            "lat": reading.latitude,
+            "lon": reading.longitude,
+            "temp": reading.temperature,
+            "app_temp": reading.feels_like_temperature,
+        }
+        for reading in readings
+    ]
+    return weather_data

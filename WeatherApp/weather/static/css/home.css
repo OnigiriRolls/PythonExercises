@@ -44,6 +44,7 @@
 
     .temperatures-button,
     .average-button,
+    .history-button,
     .logout-button {
         border: none;
         border-radius: 6px;
@@ -54,12 +55,14 @@
     }
 
     .temperatures-button,
+    .history-button,
     .average-button {
         background-color: #2878c8;
         color: white;
     }
 
     .temperatures-button:hover,
+    .history-button:hover,
     .average-button:hover {
         background-color: #1d5f9f;
     }

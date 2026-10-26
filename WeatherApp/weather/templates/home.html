@@ -18,11 +18,16 @@
                     Get temperatures
                 </button>
             </form>
-
             <form id="average-form" method="POST" action="{% url 'get_average' %}">
                 {% csrf_token %}
                 <button type="submit" class="average-button">
                     Get average
+                </button>
+            </form>
+            <form id="history-form" method="POST" action="{% url 'get_history' %}">
+                {% csrf_token %}
+                <button type="submit" class="history-button">
+                    History
                 </button>
             </form>
         </div>

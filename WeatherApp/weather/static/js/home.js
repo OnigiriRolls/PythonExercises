@@ -1,5 +1,6 @@
 const temperaturesForm = document.getElementById("temperatures-form");
 const averageForm = document.getElementById("average-form");
+const historyForm = document.getElementById("history-form");
 
 function getLocationInputs() {
     const city = document.getElementById("city").value.trim();
@@ -52,11 +53,32 @@ function createLocationFormData(form) {
     return formData;
 }
 
+function populateWeatherTable(weatherData) {
+    const tbody = document.getElementById("weather-table-body");
+    tbody.replaceChildren();
+    for (const weather of weatherData) {
+        const row = document.createElement("tr");
+        const values = [
+            weather.city_name,
+            weather.country_code,
+            weather.lat,
+            weather.lon,
+            weather.temp,
+            weather.app_temp
+        ];
+        for (const value of values) {
+            const cell = document.createElement("td");
+            cell.textContent = value ?? "";
+            row.appendChild(cell);
+        }
+        tbody.appendChild(row);
+    }
+}
+
 temperaturesForm.addEventListener("submit", async function (event) {
     event.preventDefault();
     const button = temperaturesForm.querySelector("button");
     button.disabled = true;
-
     try {
         const formData = createLocationFormData(temperaturesForm);
         if (!formData) return;
@@ -74,27 +96,7 @@ temperaturesForm.addEventListener("submit", async function (event) {
             document.getElementById("location-error").textContent = data.api_error;
             return;
         }
-
-        const tbody = document.getElementById("weather-table-body");
-        tbody.replaceChildren();
-        for (const weather of data.weather_data) {
-            const row = document.createElement("tr");
-            const values = [
-                weather.city_name,
-                weather.country_code,
-                weather.lat,
-                weather.lon,
-                weather.temp,
-                weather.app_temp
-            ];
-
-            for (const value of values) {
-                const cell = document.createElement("td");
-                cell.textContent = value ?? "";
-                row.appendChild(cell);
-            }
-            tbody.appendChild(row);
-        }
+        populateWeatherTable(data.weather_data);
     } catch (error) {
         document.getElementById("location-error").textContent = error.message;
     } finally {
@@ -130,6 +132,35 @@ averageForm.addEventListener("submit", async function (event) {
         document.getElementById("average-count").textContent = data.count;
     } catch (error) {
         document.getElementById("location-error").textContent = error.message;
+    } finally {
+        button.disabled = false;
+    }
+});
+
+historyForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    const button = historyForm.querySelector("button");
+    const errorElement = document.getElementById("location-error");
+    button.disabled = true;
+    errorElement.textContent = "";
+    try {
+        const response = await fetch(historyForm.action, {
+            method: "POST",
+            body: new FormData(historyForm),
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error("Could not retrieve history.");
+        }
+        if (data.api_error) {
+            errorElement.textContent = data.api_error;
+            return;
+        }
+
+        populateWeatherTable(data.weather_data);
+    } catch (error) {
+        errorElement.textContent = error.message;
     } finally {
         button.disabled = false;
     }

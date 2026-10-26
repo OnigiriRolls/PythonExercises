@@ -11,4 +11,5 @@ urlpatterns = [
     path("logout/", views.logout_view, name="logout"),
     path("get-temperatures/", api_views.get_temperatures_view, name="get_temperatures"),
     path("get-average/", api_views.get_average_view, name="get_average"),
+    path("get-history/", api_views.get_history_view, name="get_history"),
 ]

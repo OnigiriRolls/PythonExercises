@@ -4,6 +4,7 @@ from django.views.decorators.http import require_POST
 from .services import (
     fetch_and_save_weather,
     calculate_and_save_average,
+    get_weather_history,
 )
 
 
@@ -61,6 +62,18 @@ def get_average_view(request):
     return JsonResponse(
         {
             **result,
+            "api_error": None,
+        }
+    )
+
+
+@require_POST
+@login_required
+def get_history_view(request):
+    weather_data = get_weather_history(request.user)
+    return JsonResponse(
+        {
+            "weather_data": weather_data,
             "api_error": None,
         }
     )
