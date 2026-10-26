@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 
 
 # Create your models here.
@@ -29,6 +30,11 @@ class WeatherReading(models.Model):
         null=True,
         blank=True,
     )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="weather_readings",
+    )
     city_name = models.CharField(max_length=100, blank=True)
     country_code = models.CharField(max_length=2, blank=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6)
@@ -48,6 +54,11 @@ class TemperatureAverage(models.Model):
         related_name="temperature_averages",
         null=True,
         blank=True,
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="temperature_averages",
     )
     latitude = models.DecimalField(max_digits=9, decimal_places=6)
     longitude = models.DecimalField(max_digits=9, decimal_places=6)
