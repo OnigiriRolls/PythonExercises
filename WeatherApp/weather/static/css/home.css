@@ -82,6 +82,87 @@
         padding: 28px 32px;
     }
 
+    .location-form {
+        margin-bottom: 24px;
+        padding: 22px 24px;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .location-form h3 {
+        margin: 0 0 18px;
+    }
+
+    .location-inputs {
+        display: grid;
+        grid-template-columns: minmax(250px, 1fr) auto minmax(350px, 1fr);
+        align-items: center;
+        gap: 24px;
+        width: 100%;
+    }
+
+    .coordinates-group {
+        display: flex;
+        gap: 16px;
+        min-width: 0;
+    }
+
+    .coordinates-group .input-group {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .input-group {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .input-group label {
+        margin-bottom: 8px;
+    }
+
+    .city-group {
+        max-width: 550px;
+    }
+
+    .input-group input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px 12px;
+    }
+
+    .or-divider {
+        align-self: center;
+        font-weight: bold;
+        color: #777;
+        padding: 0 4px;
+        margin-bottom: 8px;
+    }
+
+    .input-group input:focus {
+        border-color: #2878c8;
+        box-shadow: 0 0 0 2px rgba(40, 120, 200, 0.15);
+    }
+
+    .location-hint {
+        margin-top: 12px;
+        font-size: 13px;
+        color: #6c757d;
+    }
+
+    .location-error {
+        margin-top: 6px;
+        color: #dc3545;
+        font-size: 13px;
+    }
+
+    .location-error:empty {
+        display: none;
+    }
+
     .average-result {
         display: flex;
         align-items: center;

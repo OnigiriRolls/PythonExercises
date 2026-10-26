@@ -1,19 +1,26 @@
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from .services import fetch_and_save_weather, calculate_and_save_average
+from .services import (
+    fetch_and_save_weather,
+    calculate_and_save_average,
+)
 
 
 @require_POST
 @login_required
 def get_temperatures_view(request):
     try:
-        weather_data = fetch_and_save_weather()
+        weather_data = fetch_and_save_weather(
+            city=request.POST.get("city", ""),
+            latitude=request.POST.get("latitude", ""),
+            longitude=request.POST.get("longitude", ""),
+        )
     except ValueError as error:
         return JsonResponse({"api_error": str(error)}, status=400)
     except Exception:
         return JsonResponse(
-            {"api_error": "Could not retrieve weather data. Please try again."},
+            {"api_error": ("Could not retrieve weather data. Please try again.")},
             status=500,
         )
 
@@ -34,7 +41,20 @@ def get_temperatures_view(request):
 @require_POST
 @login_required
 def get_average_view(request):
-    result = calculate_and_save_average()
+    try:
+        result = calculate_and_save_average(
+            city=request.POST.get("city", ""),
+            latitude=request.POST.get("latitude", ""),
+            longitude=request.POST.get("longitude", ""),
+        )
+    except ValueError as error:
+        return JsonResponse({"api_error": str(error)}, status=400)
+    except Exception:
+        return JsonResponse(
+            {"api_error": ("Could not calculate the average. Please try again.")},
+            status=500,
+        )
+
     return JsonResponse(
         {
             **result,

@@ -40,6 +40,33 @@
     </header>
 
     <main class="main-content">
+
+        <div class="location-form">
+            <div class="location-inputs">
+                <div class="input-group city-group">
+                    <label for="city">City</label>
+                    <input type="text" id="city" name="city" placeholder="Enter city name">
+                </div>
+                <div class="or-divider">OR</div>
+                <div class="coordinates-group">
+                    <div class="input-group">
+                        <label for="latitude">Latitude</label>
+                        <input type="number" id="latitude" name="latitude" step="0.01" min="-90" max="90"
+                            placeholder="Latitude">
+                    </div>
+                    <div class="input-group">
+                        <label for="longitude">Longitude</label>
+                        <input type="number" id="longitude" name="longitude" step="0.01" min="-180" max="180"
+                            placeholder="Longitude">
+                    </div>
+                </div>
+            </div>
+            <div class="location-hint">
+                Write a city or both coordinates.
+            </div>
+            <div id="location-error" class="location-error" role="alert"></div>
+        </div>
+
         <div class="average-result">
             <p>Average: <span id="average-value">...</span></p>
             <p>Count: <span id="average-count">...</span></p>
