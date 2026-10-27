@@ -12,9 +12,9 @@ from django.core.paginator import Paginator
 
 
 def validate_location_input(city="", latitude="", longitude=""):
-    city = city.strip()
-    latitude = latitude.strip()
-    longitude = longitude.strip()
+    city = (city or "").strip()
+    latitude = (latitude or "").strip()
+    longitude = (longitude or "").strip()
 
     if not latitude and not longitude:
         if not city:
