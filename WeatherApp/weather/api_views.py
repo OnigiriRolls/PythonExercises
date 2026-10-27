@@ -90,6 +90,6 @@ def get_history_view(request):
         {
             "weather_data": result["weather_data"],
             "pagination": result["pagination"],
-            "api_error": None,
+            "api_error": result.get("errors") or None,
         }
     )

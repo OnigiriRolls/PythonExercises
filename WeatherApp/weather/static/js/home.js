@@ -182,14 +182,28 @@ async function loadHistory(page = 1) {
         const data = await response.json();
 
         if (!response.ok) {
+            if (data.errors) {
+                const messages = Object.values(data.errors)
+                    .flat()
+                    .map(error => error.message);
+                throw new Error(messages.join(" "));
+            }
             throw new Error("Could not retrieve history.");
         }
+        const errorElement = document.getElementById("history-error");
         if (data.api_error) {
-            errorElement.textContent = data.api_error;
+            errorElement.textContent = Object.entries(data.api_error)
+                .map(([field, errors]) =>
+                    `${field}: ${errors.map(error => error.message).join(", ")}`
+                )
+                .join(" ");
+
+            errorElement.hidden = false;
             return;
         }
 
         populateWeatherTable(data.weather_data);
+        errorElement.hidden = true;
         showHistoryFiltersAndPaginationRow(true);
         currentPage = data.pagination.current_page;
         totalPages = data.pagination.total_pages;

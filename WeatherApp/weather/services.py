@@ -5,6 +5,8 @@ import requests
 from decimal import Decimal, InvalidOperation
 from django.conf import settings
 from django.db.models import Avg, Count
+
+from weather.forms import WeatherHistoryFilterForm
 from .models import Location, WeatherReading, TemperatureAverage
 from django.core.paginator import Paginator
 
@@ -196,38 +198,56 @@ def calculate_and_save_average(user, city=None, latitude=None, longitude=None):
 
 def get_weather_history(
     user,
-    filters=None,
+    filters={},
     page=1,
     page_size=5,
 ):
-    filters = filters or {}
+    input_data = {
+        **filters,
+        "page": page,
+    }
+    form = WeatherHistoryFilterForm(input_data)
+    if not form.is_valid():
+        return {
+            "weather_data": [],
+            "pagination": {
+                "current_page": 1,
+                "total_pages": 0,
+                "total_records": 0,
+                "has_next": False,
+                "has_previous": False,
+            },
+            "errors": form.errors.get_json_data(),
+        }
+    validated_data = form.cleaned_data
+
     readings = WeatherReading.objects.filter(user=user)
 
-    city = filters.get("city", "").strip()
+    city = (validated_data.get("city") or "").strip()
     if city:
         readings = readings.filter(city_name__icontains=city)
 
-    country = filters.get("country", "").strip()
+    country = (validated_data.get("country") or "").strip()
     if country:
         readings = readings.filter(country_code__icontains=country)
 
-    latitude = filters.get("latitude", "").strip()
+    latitude = (validated_data.get("latitude") or "").strip()
     if latitude:
         readings = readings.filter(latitude=latitude)
 
-    longitude = filters.get("longitude", "").strip()
+    longitude = (validated_data.get("longitude") or "").strip()
     if longitude:
         readings = readings.filter(longitude=longitude)
 
-    temperature_min = filters.get("temperature_min", "").strip()
-    temperature_max = filters.get("temperature_max", "").strip()
+    temperature_min = (validated_data.get("temperature_min") or "").strip()
+    temperature_max = (validated_data.get("temperature_max") or "").strip()
     if temperature_min:
         readings = readings.filter(temperature__gte=temperature_min)
     if temperature_max:
         readings = readings.filter(temperature__lte=temperature_max)
 
-    feels_like_min = filters.get("feels_like_min", "").strip()
-    feels_like_max = filters.get("feels_like_max", "").strip()
+    feels_like_min = (validated_data.get("feels_like_min") or "").strip()
+    feels_like_max = (validated_data.get("feels_like_max") or "").strip()
     if feels_like_min:
         readings = readings.filter(feels_like_temperature__gte=feels_like_min)
     if feels_like_max:
@@ -235,7 +255,7 @@ def get_weather_history(
 
     readings = readings.order_by("-created_at")
     paginator = Paginator(readings, page_size)
-    page_obj = paginator.get_page(page)
+    page_obj = paginator.get_page(validated_data.get("page") or 1)
     weather_data = [
         {
             "city_name": reading.city_name,
@@ -256,4 +276,5 @@ def get_weather_history(
             "has_next": page_obj.has_next(),
             "has_previous": page_obj.has_previous(),
         },
+        "errors": {},
     }
