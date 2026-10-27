@@ -43,6 +43,14 @@ class WeatherReading(models.Model):
     feels_like_temperature = models.DecimalField(max_digits=6, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        indexes = [
+            models.Index(
+                fields=["user", "-created_at"],
+                name="weather_user_date_idx",
+            ),
+        ]
+
     def __str__(self):
         return f"{self.city_name}: {self.temperature}°C"
 
