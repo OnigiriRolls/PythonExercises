@@ -70,10 +70,26 @@ def get_average_view(request):
 @require_POST
 @login_required
 def get_history_view(request):
-    weather_data = get_weather_history(request.user)
+    filters = {
+        "city": request.POST.get("city", ""),
+        "country": request.POST.get("country", ""),
+        "latitude": request.POST.get("latitude", ""),
+        "longitude": request.POST.get("longitude", ""),
+        "temperature_min": request.POST.get("temperature_min", ""),
+        "temperature_max": request.POST.get("temperature_max", ""),
+        "feels_like_min": request.POST.get("feels_like_min", ""),
+        "feels_like_max": request.POST.get("feels_like_max", ""),
+    }
+    page = request.POST.get("page", 1)
+    result = get_weather_history(
+        user=request.user,
+        filters=filters,
+        page=page,
+    )
     return JsonResponse(
         {
-            "weather_data": weather_data,
+            "weather_data": result["weather_data"],
+            "pagination": result["pagination"],
             "api_error": None,
         }
     )

@@ -1,6 +1,16 @@
 const temperaturesForm = document.getElementById("temperatures-form");
 const averageForm = document.getElementById("average-form");
 const historyForm = document.getElementById("history-form");
+const historyFilters = document.getElementById("history-filters");
+const historyPagination = document.getElementById("history-pagination");
+
+let currentPage = 1;
+let totalPages = 1;
+
+function showHistoryFiltersAndPaginationRow(show) {
+    historyFilters.hidden = !show;
+    historyPagination.hidden = !show;
+}
 
 function getLocationInputs() {
     const city = document.getElementById("city").value.trim();
@@ -97,6 +107,7 @@ temperaturesForm.addEventListener("submit", async function (event) {
             return;
         }
         populateWeatherTable(data.weather_data);
+        showHistoryFiltersAndPaginationRow(false);
     } catch (error) {
         document.getElementById("location-error").textContent = error.message;
     } finally {
@@ -137,16 +148,36 @@ averageForm.addEventListener("submit", async function (event) {
     }
 });
 
-historyForm.addEventListener("submit", async function (event) {
-    event.preventDefault();
+function getHistoryFilters() {
+    return {
+        city: document.getElementById("filter-city").value.trim(),
+        country: document.getElementById("filter-country").value.trim(),
+        latitude: document.getElementById("filter-latitude").value.trim(),
+        longitude: document.getElementById("filter-longitude").value.trim(),
+        temperature_min: document.getElementById("filter-temperature-min").value.trim(),
+        temperature_max: document.getElementById("filter-temperature-max").value.trim(),
+        feels_like_min: document.getElementById("filter-feels-like-min").value.trim(),
+        feels_like_max: document.getElementById("filter-feels-like-max").value.trim()
+    };
+}
+
+async function loadHistory(page = 1) {
     const button = historyForm.querySelector("button");
     const errorElement = document.getElementById("location-error");
     button.disabled = true;
     errorElement.textContent = "";
+
     try {
+        const formData = new FormData(historyForm);
+        const filters = getHistoryFilters();
+        for (const [key, value] of Object.entries(filters)) {
+            formData.set(key, value);
+        }
+        formData.set("page", page);
+
         const response = await fetch(historyForm.action, {
             method: "POST",
-            body: new FormData(historyForm),
+            body: formData
         });
         const data = await response.json();
 
@@ -159,9 +190,49 @@ historyForm.addEventListener("submit", async function (event) {
         }
 
         populateWeatherTable(data.weather_data);
+        showHistoryFiltersAndPaginationRow(true);
+        currentPage = data.pagination.current_page;
+        totalPages = data.pagination.total_pages;
+        document.getElementById("page-info").textContent = `Page ${currentPage} of ${totalPages}`;
+        document.getElementById("previous-page").disabled = !data.pagination.has_previous;
+        document.getElementById("next-page").disabled = !data.pagination.has_next;
     } catch (error) {
         errorElement.textContent = error.message;
     } finally {
         button.disabled = false;
     }
+}
+
+historyForm.addEventListener("submit", function (event) {
+    event.preventDefault();
+    loadHistory(1);
 });
+
+document.getElementById("previous-page").addEventListener("click", function () {
+    if (currentPage > 1) {
+        loadHistory(currentPage - 1);
+    }
+});
+
+document.getElementById("next-page").addEventListener("click", function () {
+    if (currentPage < totalPages) {
+        loadHistory(currentPage + 1);
+    }
+});
+
+const historyFilterIds = [
+    "filter-city",
+    "filter-country",
+    "filter-latitude",
+    "filter-longitude",
+    "filter-temperature-min",
+    "filter-temperature-max",
+    "filter-feels-like-min",
+    "filter-feels-like-max"
+];
+
+for (const id of historyFilterIds) {
+    document.getElementById(id).addEventListener("change", function () {
+        loadHistory(1);
+    });
+}

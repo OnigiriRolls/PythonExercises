@@ -90,6 +90,33 @@
                         <th>Temperature (°C)</th>
                         <th>Feels Like (°C)</th>
                     </tr>
+
+                    <tr class="filter-row" id="history-filters" hidden>
+                        <th>
+                            <input type="text" id="filter-city" placeholder="Filter city">
+                        </th>
+                        <th>
+                            <input type="text" id="filter-country" placeholder="Filter country">
+                        </th>
+                        <th>
+                            <input type="number" id="filter-latitude" step="0.01" placeholder="Exact latitude">
+                        </th>
+                        <th>
+                            <input type="number" id="filter-longitude" step="0.01" placeholder="Exact longitude">
+                        </th>
+                        <th>
+                            <div class="range-filter">
+                                <input type="number" id="filter-temperature-min" step="0.01" placeholder="Min">
+                                <input type="number" id="filter-temperature-max" step="0.01" placeholder="Max">
+                            </div>
+                        </th>
+                        <th>
+                            <div class="range-filter">
+                                <input type="number" id="filter-feels-like-min" step="0.01" placeholder="Min">
+                                <input type="number" id="filter-feels-like-max" step="0.01" placeholder="Max">
+                            </div>
+                        </th>
+                    </tr>
                 </thead>
 
                 <tbody id="weather-table-body">
@@ -107,6 +134,12 @@
                     {% endif %}
                 </tbody>
             </table>
+
+            <div class="pagination" id="history-pagination" hidden>
+                <button type="button" id="previous-page" disabled>Previous</button>
+                <span id="page-info">Page 1 of 1</span>
+                <button type="button" id="next-page" disabled>Next</button>
+            </div>
         </div>
 
         {% if api_error %}

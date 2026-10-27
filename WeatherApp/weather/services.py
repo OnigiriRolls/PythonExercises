@@ -6,6 +6,7 @@ from decimal import Decimal, InvalidOperation
 from django.conf import settings
 from django.db.models import Avg, Count
 from .models import Location, WeatherReading, TemperatureAverage
+from django.core.paginator import Paginator
 
 
 def validate_location_input(city="", latitude="", longitude=""):
@@ -193,8 +194,48 @@ def calculate_and_save_average(user, city=None, latitude=None, longitude=None):
     }
 
 
-def get_weather_history(user):
-    readings = WeatherReading.objects.filter(user=user).order_by("-created_at")
+def get_weather_history(
+    user,
+    filters=None,
+    page=1,
+    page_size=5,
+):
+    filters = filters or {}
+    readings = WeatherReading.objects.filter(user=user)
+
+    city = filters.get("city", "").strip()
+    if city:
+        readings = readings.filter(city_name__icontains=city)
+
+    country = filters.get("country", "").strip()
+    if country:
+        readings = readings.filter(country_code__icontains=country)
+
+    latitude = filters.get("latitude", "").strip()
+    if latitude:
+        readings = readings.filter(latitude=latitude)
+
+    longitude = filters.get("longitude", "").strip()
+    if longitude:
+        readings = readings.filter(longitude=longitude)
+
+    temperature_min = filters.get("temperature_min", "").strip()
+    temperature_max = filters.get("temperature_max", "").strip()
+    if temperature_min:
+        readings = readings.filter(temperature__gte=temperature_min)
+    if temperature_max:
+        readings = readings.filter(temperature__lte=temperature_max)
+
+    feels_like_min = filters.get("feels_like_min", "").strip()
+    feels_like_max = filters.get("feels_like_max", "").strip()
+    if feels_like_min:
+        readings = readings.filter(feels_like_temperature__gte=feels_like_min)
+    if feels_like_max:
+        readings = readings.filter(feels_like_temperature__lte=feels_like_max)
+
+    readings = readings.order_by("-created_at")
+    paginator = Paginator(readings, page_size)
+    page_obj = paginator.get_page(page)
     weather_data = [
         {
             "city_name": reading.city_name,
@@ -204,6 +245,15 @@ def get_weather_history(user):
             "temp": reading.temperature,
             "app_temp": reading.feels_like_temperature,
         }
-        for reading in readings
+        for reading in page_obj.object_list
     ]
-    return weather_data
+    return {
+        "weather_data": weather_data,
+        "pagination": {
+            "current_page": page_obj.number,
+            "total_pages": paginator.num_pages,
+            "total_records": paginator.count,
+            "has_next": page_obj.has_next(),
+            "has_previous": page_obj.has_previous(),
+        },
+    }
